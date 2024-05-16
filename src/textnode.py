@@ -7,6 +7,16 @@ text_type_code = "code"
 text_type_link = "link"
 text_type_image = "image"
 
+import re
+
+def extract_markdown_images(text):
+  matches = re.findall(r"!\[(.*?)\]\((.*?)\)", text)
+  return matches
+
+def extract_markdown_links(text):
+  matches = re.findall(r"\[(.*?)\]\((.*?)\)", text)
+  return matches
+
 class TextNode:
   def __init__(self, text, text_type, url=None):
     self.text = text
