@@ -10,7 +10,9 @@ from textnode import (
   text_type_image,
   text_type_link,
   extract_markdown_images,
-  extract_markdown_links
+  extract_markdown_links,
+  split_nodes_image,
+  split_nodes_link
 )
 
 class TestTextNode(unittest.TestCase):
@@ -81,6 +83,58 @@ class TestTextNode(unittest.TestCase):
       extract_markdown_links(text),
       [("link", "https://www.example.com"), ("another", "https://www.example.com/another")]
     )
+
+  def test_split_nodes_image(self):
+    node = TextNode(
+      "This is text with an ![image](https://storage.googleapis.com/qvault-webapp-dynamic-assets/course_assets/zjjcJKZ.png) and another ![second image](https://storage.googleapis.com/qvault-webapp-dynamic-assets/course_assets/3elNhQu.png)",
+      text_type_text
+    )
+    new_nodes = split_nodes_image([node])
+    self.assertEqual(new_nodes, [
+      TextNode("This is text with an ", text_type_text),
+      TextNode("image", text_type_image, "https://storage.googleapis.com/qvault-webapp-dynamic-assets/course_assets/zjjcJKZ.png"),
+      TextNode(" and another ", text_type_text),
+      TextNode(
+        "second image", text_type_image, "https://storage.googleapis.com/qvault-webapp-dynamic-assets/course_assets/3elNhQu.png"
+      ),
+    ])
+
+  def test_split_nodes_image_multiple(self):
+    nodes = [
+      TextNode("This node doesn't have any images", text_type_text),
+      TextNode("But this one does! Look at it: ![image](https://avatars.githubusercontent.com/u/4808683?v=4)", text_type_text)
+    ]
+    new_nodes = split_nodes_image(nodes)
+    self.assertEqual(new_nodes, [
+      TextNode("This node doesn't have any images", text_type_text),
+      TextNode("But this one does! Look at it: ", text_type_text),
+      TextNode("image", text_type_image, "https://avatars.githubusercontent.com/u/4808683?v=4"),
+    ])
+
+  def test_split_nodes_link(self):
+    node = TextNode("This is text with a [link](https://www.example.com) and [another](https://www.example.com/another)",
+                    text_type_text)
+    new_nodes = split_nodes_link([node])
+    self.assertEqual(new_nodes, [
+      TextNode("This is text with a ", text_type_text),
+      TextNode("link", text_type_link, "https://www.example.com"),
+      TextNode(" and ", text_type_text),
+      TextNode(
+        "another", text_type_link, "https://www.example.com/another"
+      ),
+    ])
+
+  def test_split_nodes_link_multiple(self):
+    nodes = [
+      TextNode("This node doesn't have any links", text_type_text),
+      TextNode("But this one does! Check it out: [link](https://example.com)", text_type_text)
+    ]
+    new_nodes = split_nodes_link(nodes)
+    self.assertEqual(new_nodes, [
+      TextNode("This node doesn't have any links", text_type_text),
+      TextNode("But this one does! Check it out: ", text_type_text),
+      TextNode("link", text_type_link, "https://example.com"),
+    ])
 
 if __name__ == "__main__":
   unittest.main()
