@@ -35,6 +35,9 @@ class ParentNode(HTMLNode):
   def __init__(self, tag, children, props={}):
     super().__init__(tag, None, children, props)
 
+  def __repr__(self):
+    return f'ParentNode(tag={self.tag}, value={self.value}, children={self.children}, props={self.props})'
+
   def to_html(self):
     if self.tag is None:
       raise ValueError("Tag must be provided")

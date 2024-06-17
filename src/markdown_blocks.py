@@ -1,3 +1,5 @@
+from htmlnode import LeafNode, ParentNode
+
 block_type_paragraph = "paragraph"
 block_type_heading = "heading"
 block_type_code = "code"
@@ -62,3 +64,46 @@ def block_to_block_type(block):
   if is_ordered_list(block):
     return block_type_ordered_list
   return block_type_paragraph
+
+def markdown_to_html_node(markdown):
+  blocks = markdown_to_blocks(markdown)
+  div_nodes = []
+  for b in blocks:
+    b_type = block_to_block_type(b)
+    if b_type == block_type_code:
+      text = b[3:-3].strip()
+      div_nodes.append(ParentNode(tag="pre", children=[
+        LeafNode(tag="code", value=text)
+      ]))
+    if b_type == block_type_heading:
+      i = 0
+      while b[i] != ' ':
+        i += 1
+      i += 1
+      text = b[i:]
+      div_nodes.append(LeafNode(tag="h"+str(i-1), value=text))
+    if (b_type == block_type_quote or 
+      b_type == block_type_ordered_list or 
+      b_type == block_type_unordered_list):
+      b_lines = b.split('\n')
+      text = []
+      for l in b_lines:
+        i = 0
+        while l[i] != ' ':
+          i += 1
+        i += 1
+        text.append(l[i:])
+      if b_type == block_type_unordered_list:
+        list_lines = []
+        for t in text:
+          list_lines.append(LeafNode(tag="li", value=t))
+        div_nodes.append(ParentNode(tag="ul", children=list_lines))
+      if b_type == block_type_ordered_list:
+        list_lines = []
+        for t in text:
+          list_lines.append(LeafNode(tag="li", value=t))
+        div_nodes.append(ParentNode(tag="ol", children=list_lines))
+      if b_type == block_type_quote:
+        div_nodes.append(LeafNode(tag="blockquote", value="\n".join(text)))
+  div = ParentNode(tag="div", children=div_nodes)
+  return div
